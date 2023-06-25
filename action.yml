@@ -4,6 +4,12 @@ inputs:
   remote-ip:
     description: your host
     required: true
+  SSH_PRIVATE_KEY:
+    description: private ssh key
+    required: true
+  SSH_PUBLIC_KEY:
+    description: public ssh key
+    required: true
 runs:
   using: composite
   steps:
@@ -17,8 +23,8 @@ runs:
     run: ssh-keygen -A
   - shell: msys2 {0}
     env:
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      SSH_PRIVATE_KEY: ${{ inputs.SSH_PRIVATE_KEY }}
+      SSH_PUBLIC_KEY: ${{ inputs.SSH_PUBLIC_KEY }}
     run: |
       mkdir -p ~/.ssh
       echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
