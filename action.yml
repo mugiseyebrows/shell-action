@@ -1,0 +1,32 @@
+name: shell action
+description: create remote shell using reverse ssh tunnel
+inputs:
+  remote-ip:
+    description: your host
+    required: true
+runs:
+  using: composite
+  steps:
+  - uses: msys2/setup-msys2@v2
+    with:
+      update: false
+      install: openssh
+  - shell: cmd
+    run: net user sshd /add /fullname:"Privilege separation user for sshd" /homedir:C:\msys64\var\empty /active:no
+  - shell: msys2 {0}
+    run: ssh-keygen -A
+  - shell: msys2 {0}
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+    run: |
+      mkdir -p ~/.ssh
+      echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+      echo "$SSH_PUBLIC_KEY" > ~/.ssh/authorized_keys
+      chmod 600 ~/.ssh/authorized_keys
+      echo "$SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
+  - shell: msys2 {0}
+    run: /usr/bin/sshd
+  - shell: msys2 {0}
+    run: ssh -o "StrictHostKeyChecking=no" -N -R 2222:localhost:22 root@${{ inputs.remote-ip }}
